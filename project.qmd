@@ -602,6 +602,8 @@ Although cross validation was used to minimize optimization bias, only optimizin
 
 A better approach would be using a combination of scoring metrics for hyperparameter optimization and evaluation. This won't necessary improve the scoring of our model but would make our model generalize better. 
 
+### SHAP Example: Positive Prediction
+
 ```{python}
 ohe_feature_names = (
     best_pipe.named_steps["columntransformer"]
@@ -636,13 +638,13 @@ print("Predicted value for the 3rd row in the training data: ", best_pipe.named_
 shap.plots.waterfall(lgbm_explanation[2, :])
 ```
 
-### SHAP Example: Positive Prediction
-
 The above SHAP plot shows an example of how predictions are made. The `expected_value` from our final model is -0.66. Using this as the threshold, predictiong above the threshold would be a positive prediction (customer defaults) and predictions below the threshold would a negative prediction (no default). 
 
 For an example of a positive case, we see PAY_AMT as the largest predictors of whether a customer would default. The `PAY_AMT` values shown have been rescaled by StandardScaler() so they are not the actual pay amount from the customer. But we can see in general negative values below -0.27 are considered positive predicators for whether a customer would default. 
 
 As we saw in our EDA, higher age groups also tend to have more defaults and this is captured in this example where `AGE_GROUP_51-50 = 1` is considered a positive indicator for default. More discussion would be required to assess whether judging someone by their age is appropriate. 
+
+### SHAP Example - Negative Prediction
 
 ```{python}
 # Example for predicted target = 0, the person will not default
@@ -650,7 +652,7 @@ print("Predicted value for the 106th row in the training data: ", best_pipe.name
 shap.plots.waterfall(lgbm_explanation[105, :])
 ```
 
-### SHAP Example - Negative Prediction
+
 
 In contrast to the positive case, we can see that `PAY_AMT` above the -0.27 threshold are considered negative indicators. This makes sense since customers who pay off their balance more are less likely to default. In addition, `REPAY_STATUS_SEP` is also a much large predicator in terms of magnitude when compared to the positive example.
 
@@ -689,7 +691,8 @@ round(pd.DataFrame(
     }, index=['Score']), 2)
 ```
 
-**Ideas for Improvement**
+**Ideas for Improvement**   
+
 - From `permutation_importance`, `REPAY_STATUS` was not contributing a lot as a predictor and was making the model more complex due to the OneHotEncoder having to add ~10 columns for every `REPAY_STATUS` month we include. Dropping these feature and only keeping the most recent month would help make the models less complex.
 - Feature selection took up a lot of computational time and we had to reduce `n_estimators` and `max_features` for the feature selector in order to make the process manageable. Dropping more features during pre-processing would allow us to use more robust values for the feature selector while also reducing fit time.
 - LightGBM and XGBoost models have built in L1 regularizations that could be used for feature selection.
