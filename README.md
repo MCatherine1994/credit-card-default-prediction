@@ -19,6 +19,8 @@ This dataset was originally featured in a [research study](https://www.sciencedi
 quarto convert project.ipynb -o project.qmd
 ```
 
+Update the name and display_name in `project.qmd` to "python3"
+
 ### Render the qmd file
 
 ```{bash}

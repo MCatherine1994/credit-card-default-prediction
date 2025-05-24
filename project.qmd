@@ -2,7 +2,7 @@
 title: Introduction
 jupyter:
   kernelspec:
-    display_name: 'Python [conda env:573] *'
+    display_name: 'python3'
     language: python
     name: python3
 ---
@@ -10,7 +10,7 @@ jupyter:
 
 This project addresses a binary classification problem: predicting whether a credit card client will default on their payment in the next month. It uses the [Default of Credit Card Clients Dataset](https://www.kaggle.com/uciml/default-of-credit-card-clients-dataset), which contains 30,000 records and 24 features, including demographic information, payment history, and billing amounts from April to September 2005.
 
-The target variable is default.payment.next.month, indicating whether the client defaulted. The remaining features provide monthly financial and repayment data that help inform this prediction task.
+The target variable is default.payment.next.month, indicating whether the client defaulted (1=yes, 0=no). The remaining features provide monthly financial and repayment data that help inform this prediction task.
 
 This dataset was originally featured in a [research study](https://www.sciencedirect.com/science/article/pii/S0957417407006719) comparing classification models for default prediction. Results in this project may be compared against findings from the paper.
 
@@ -131,7 +131,8 @@ train_df, test_df = train_test_split(df, test_size = 0.3, random_state = 123)
 
 Perform exploratory data analysis on the train set.
 
-**Summary Statistics**
+**Summary Statistics** 
+
 - REPAY_STATUS has a minimum of -2, which is outside the range of the data description. 
 
 ```{python}
@@ -143,6 +144,7 @@ train_df.iloc[:,11:].describe()
 ```
 
 **Correlation**
+ 
 - We see `BILL_AMT` has a strong collinearity with the `BILL_AMT` from the prior months. Same with `REPAY_STATUS`. We may need to find a way to address the collinearity. 
 
 ```{python}
@@ -150,10 +152,11 @@ aly.corr(train_df)
 ```
 
 **Distribution Visualization**
-- Class imbalance with `TARGET`
-- Proportion of defaults higher in 50+ age group
-- Lower default with married vs single
-- Even though `REPAY_STATUS` has a range from -2 to 9, most values cluster around  -2 to 2. 
+  
+- Class imbalance with `TARGET`  
+- Proportion of defaults higher in 50+ age group  
+- Lower default with married vs single  
+- Even though `REPAY_STATUS` has a range from -2 to 9, most values cluster around  -2 to 2   
 
 ```{python}
 aly.dist(train_df, 'TARGET', mark='bar')
@@ -166,7 +169,8 @@ aly.dist(train_df, 'TARGET')
 # Feature engineering
 
 **Added Features**
-- `AGE_GROUP`: New column to use age groups instead of age since age is too granular
+
+- `AGE_GROUP`: New column to use age groups instead of age since age is too granular.  
 - `PRO_BAL`: New columns for balance owed as a proportion of their credit limit. A person who is spending close to their limit every month could be less likely to pay off their balance when compared to a person who spends only a fraction of their limit. 
 
 ```{python}
@@ -435,17 +439,17 @@ def feature_selection_with_metrics(models, preprocessor, feature_selector, scori
     return pd.DataFrame(results)
 ```
 
-**Feature Selection - Nonlinear Models**
+### Feature Selection - Nonlinear Models  
 - Feature selection was performed using Recursive Feature Elimination with `ExtraTreesClassifier` as the feature selector.
 - This method reduced the number of features significantly but the f1 score remains approximately the same (+/- 1%) as previously.
 - The number of features did decrease significantly from 92 to 11. This would help make the model less complex without sacrificing performance.
 - The computational time for the feature selection was about 10 minutes per model, even with reduced `n_estimators` and `max_features`. This time would multiply with hyperparameter optimization so we will not include feature selection in our pipeline. 
 
 - Failed Attempts due to unreasonable computation time :
-    - Before the above sucessed attempts, we experimented feature selection with `RandomForestClassifier()` as our classifer.
+    - Before the above successed attempts, we experimented feature selection with `RandomForestClassifier()` as our classifer.
     - We use `SequentialFeatureSelector(direction="forward")` with both `Ridge()` and `RandomForestRegressor` as feature importance estimator.
     - Even with `max_feature` set to only 10, SFS takes >10 minutes to run Because the number of features after preprocessor is 92, resulting in iterations SFS fits (92 + 91 + 90 +... ) models, which is quite a lot and in total we will fit around 90 models..
-    - After switching to `RFECV(Ridge())`, it takes reasonable time to run, however, the model performance didn't improve.
+    - After switching to `RFECV(Ridge())` (Recursive Feature Elimination with Cross-Validation), it takes reasonable time to run, however, the model performance didn't improve.
 
 ```{python}
 # This code block may take time to run (30+ mins)
@@ -584,13 +588,13 @@ print("F1 score on test data: ", round(f1_score_test, 2))
 pd.merge(linear_search, nonlinear_search, left_index=True, right_index=True, how='inner').sort_values(by='test_score', axis=1, ascending=False)
 ```
 
-**Final Model**
+### Final Model
 
 The Logistic Regression model demonstrates stable performance, with both train and test F1 scores around 0.54. In contrast, the Random Forest model shows potential overfitting, with a high train score of 0.97 but a lower test score of 0.47. The LightGBM model exhibits moderate generalizability, with train and test scores of 0.66 and 0.537, respectively. XGBoost, however, shows signs of overfitting, with a train score of 0.73 and a test score of 0.46. Hyperparameter optimization provided minimal improvement in F1 scores for these models. 
 
 We choose LightGBM as the best model with optimized hyperparameters, as it achieves a slightly higher validation score compared to the Logistic Regression model and demonstrates stable performance on unseen data. 
 
-**Optimization Bias**
+### Optimization Bias
 
 The test F1 score of 0.526 is consistent with the validation score. The accuracy score on the training data is 0.868, and the accuracy score on the test data is 0.767, which shows signs of overfitting.
 
@@ -632,7 +636,7 @@ print("Predicted value for the 3rd row in the training data: ", best_pipe.named_
 shap.plots.waterfall(lgbm_explanation[2, :])
 ```
 
-**SHAP Example: Positive Prediction**
+### SHAP Example: Positive Prediction
 
 The above SHAP plot shows an example of how predictions are made. The `expected_value` from our final model is -0.66. Using this as the threshold, predictiong above the threshold would be a positive prediction (customer defaults) and predictions below the threshold would a negative prediction (no default). 
 
@@ -646,20 +650,22 @@ print("Predicted value for the 106th row in the training data: ", best_pipe.name
 shap.plots.waterfall(lgbm_explanation[105, :])
 ```
 
-**SHAP Example - Negative Prediction**
+### SHAP Example - Negative Prediction
 
 In contrast to the positive case, we can see that `PAY_AMT` above the -0.27 threshold are considered negative indicators. This makes sense since customers who pay off their balance more are less likely to default. In addition, `REPAY_STATUS_SEP` is also a much large predicator in terms of magnitude when compared to the positive example.
 
 # Summary of results
 
 Overall our model achieved moderate results at predicting whether a customer would default on credit card payments.
+
 1. **F1 score = 0.53** is moderate. It is quite a harmonic mean of precision and recall, suggesting the model is balancing the false negative and false positive equally. 
 2. **Recall score = 0.59**, higher than our f1 score. The model identifies about 60% of customers who will actually default. Since the bank will care about default payment more, there's still a lot of space for improvement.
 3. **Precision = 0.47**. Of all customers flagged, only 47% actually default. This indicates a high false alarm rate by our model's prediction. 
 4. **Overall Accuracy=0.77** It is a moderately good results but not the best. Since there's class imbalance, we do have to sacrifice some accuracy in exchange true positive.
 5. **True negative rate:** 0.64/(0.64 + 0.15) ≈  81%. Our model correctly identifies 81.4% of customers who will pay on time, which is good for the bank, because the bank won't have to flag reliable customers unnecessarily and waste too much on rick control costs.
 
-Business Implications:  
+**Business Implications**  
+
 - Recall score suggests the model is missing about 40% of actual defaults. This could be costly for bank.
 - About 15% customers were incorrectly flagged as defaulters. Bank might cast some unnecessary restrictions for reliable customers who might actually purchase more and pay duly.
 
